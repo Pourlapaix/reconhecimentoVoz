@@ -27,7 +27,7 @@ def salvarCaminhoPrograma():
     caminhoPrograma = askopenfilename(filetypes = ftypes, initialdir = dir1, title = ttl)
     root.destroy();
 
-    if(caminhoPrograma != "")
+    if caminhoPrograma != "":
         try:
             os.startfile(caminhoPrograma)
             listaCaminhos['archives'].append({'caminho': caminhoPrograma, 'nome': palavras[1].lower()})
@@ -37,9 +37,12 @@ def salvarCaminhoPrograma():
             print("Dont work this file.")
     return
 
+print("Olá! Atualmente eu repito o que você diz, e abro programas!")
+print("Para abrir programas, fale 'Abrir nomedoprograma', e ele irá abrir uma caixa para você selecionar o exe do arquivo.")
+	
 with speaker.Microphone() as speak:
     r.adjust_for_ambient_noise(speak)
-
+	
     while True:
         try:
             audio = r.listen(speak)
