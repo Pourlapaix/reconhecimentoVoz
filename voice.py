@@ -1,4 +1,4 @@
-import speech_recognition as speaker
+﻿import speech_recognition as speaker
 import os
 import json
 
@@ -6,7 +6,7 @@ import json
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 
-ftypes = [('Exe files',"*.exe")]
+ftypes = [('Exe files',"*.exe"), ('Photo files',"*.jpg")]
 ttl  = "Select the program"
 dir1 = 'C:\\'
 
@@ -20,7 +20,7 @@ else:
     listaCaminhos = json.loads(texto)
 
 #Reconhecedor do Google
-r = speaker.Recognizer()
+rec = speaker.Recognizer()
 
 def salvarCaminhoPrograma():
     root = Tk()
@@ -30,7 +30,7 @@ def salvarCaminhoPrograma():
     if caminhoPrograma != "":
         try:
             os.startfile(caminhoPrograma)
-            listaCaminhos['archives'].append({'caminho': caminhoPrograma, 'nome': palavras[1].lower()})
+            listaCaminhos['archives'].append({'caminho': caminhoPrograma, 'nome': fala.lower().replace("abrir ","",1)})
             with open('meu_arquivo.json', 'w', encoding='utf-8') as f:
                 json.dump(listaCaminhos, f)
         except:
@@ -39,14 +39,14 @@ def salvarCaminhoPrograma():
 
 print("Olá! Atualmente eu repito o que você diz, e abro programas!")
 print("Para abrir programas, fale 'Abrir nomedoprograma', e ele irá abrir uma caixa para você selecionar o exe do arquivo.")
-	
+
 with speaker.Microphone() as speak:
-    r.adjust_for_ambient_noise(speak)
-	
+    rec.adjust_for_ambient_noise(speak)
+
     while True:
         try:
-            audio = r.listen(speak)
-            fala = r.recognize_google(audio, language='pt')
+            audio = rec.listen(speak)
+            fala = rec.recognize_google(audio, language='pt')
 
             palavras = fala.split()
 
