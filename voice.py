@@ -30,11 +30,12 @@ def salvarCaminhoPrograma():
     if caminhoPrograma != "":
         try:
             os.startfile(caminhoPrograma)
-            listaCaminhos['archives'].append({'caminho': caminhoPrograma, 'nome': fala.lower().replace("abrir ","",1)})
+            listaCaminhos['archives'].append({'caminho': caminhoPrograma, 'nome': fala})
             with open('meu_arquivo.json', 'w', encoding='utf-8') as f:
                 json.dump(listaCaminhos, f)
+            print("Comando salvo com sucesso.")
         except:
-            print("Dont work this file.")
+            print("Não funcionei com este arquivo.")
     return
 
 print("Olá! Atualmente eu repito o que você diz, e abro programas!")
@@ -47,15 +48,16 @@ with speaker.Microphone() as speak:
         try:
             audio = rec.listen(speak)
             fala = rec.recognize_google(audio, language='pt')
-
             palavras = fala.split()
+            print('Você disse: ', fala)
 
             if palavras[0].lower() == "abrir" and len(palavras) > 1:
+                fala = fala.lower().replace("abrir ","",1)
                 if len(listaCaminhos['archives']) > 0:
                     achouPrograma = False
                     for i in range(len(listaCaminhos['archives'])):
                         programa = listaCaminhos['archives'][i]
-                        if programa['nome'] == palavras[1].lower():
+                        if programa['nome'] == fala:
                             achouPrograma = True
                             break
 
@@ -65,9 +67,7 @@ with speaker.Microphone() as speak:
                         salvarCaminhoPrograma()
                 else:
                     salvarCaminhoPrograma()
-
-            print('Você disse: ', fala)
         except speaker.UnknownValueError:
-            print("Google Speech Recognition could not understand audio")
+            print("Não consegui entender seu áudio")
         except speaker.RequestError as e:
-            print("Could not request results from Google Speech Recognition service; {0}".format(e))
+            print("A sua requisição de áudio falhou, verifique se está conectado na internet {0}".format(e))
