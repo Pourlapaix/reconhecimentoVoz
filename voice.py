@@ -47,8 +47,11 @@ def escolher ():
         if selecionar != '':
             selecionar = str(selecionar)[1:-1].split("', ");
             if len(selecionar) == 1:
-                selecionar[0] = selecionar[0][0:-2]
+                selecionar[0] = selecionar[0][0:-1]
+
             for i in range(len(selecionar)):
+                if i == len(selecionar) -1:
+                    selecionar[i] = selecionar[i][0:-1]
                 musicas.append(selecionar[i][1::])
             reproduzir();
         else:
