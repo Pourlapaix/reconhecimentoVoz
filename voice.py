@@ -1,6 +1,15 @@
 ﻿import speech_recognition as speaker
-import os
-import json
+from pygame  import mixer
+from gtts import gTTS
+import os,json,re,playsound
+
+def falar (frase):
+    file = str("hello" + str(frase[0]) + ".mp3")
+    gTTS(text=frase, lang='pt').save('/tmp/'+file)
+    playsound.playsound('/tmp/'+file,True)
+    os.remove('/tmp/'+file)
+
+falar('Bem vindo!')
 
 #Seletor de arquivos
 from tkinter import Tk
@@ -11,7 +20,7 @@ ttl  = "Select the program"
 dir1 = 'C:\\'
 
 #Programas já salvos
-with open('meu_arquivo.json', 'r') as f:
+with open('memoria.json', 'r') as f:
     texto = f.read()
 
 if texto == "":
@@ -22,6 +31,43 @@ else:
 #Reconhecedor do Google
 rec = speaker.Recognizer()
 
+#Lista de musicas
+musicas = []
+
+def escolher ():
+        falar('Ok! Selecione as músicas que deseja ouvir.')
+        root = Tk();
+        selecionar = askopenfilename(initialdir=dir1,
+                           filetypes =(("Arquivo de audio", "*.mp3"),("All Files","*.*")),
+                           title = "Selecione as musicas",
+                           multiple = True
+                           )
+        root.destroy();
+
+        if selecionar != '':
+            selecionar = str(selecionar)[1:-1].split("', ");
+            if len(selecionar) == 1:
+                selecionar[0] = selecionar[0][0:-2]
+            for i in range(len(selecionar)):
+                musicas.append(selecionar[i][1::])
+            reproduzir();
+        else:
+            falar('Você não selecionou nenhuma música.')
+        return musicas
+
+def reproduzir ():
+        musicaAtual = 0
+        mixer.init()
+        while True:
+            if mixer.music.get_busy() == False:
+                proximaMusica(musicaAtual)
+                musicaAtual += 1
+
+def proximaMusica(musicaAtual):
+    print("Tocando agora "+musicas[musicaAtual])
+    musica_atual = mixer.music.load(musicas[musicaAtual])
+    musica_atual = mixer.music.play()
+
 def salvarCaminhoPrograma():
     root = Tk()
     caminhoPrograma = askopenfilename(filetypes = ftypes, initialdir = dir1, title = ttl)
@@ -31,15 +77,12 @@ def salvarCaminhoPrograma():
         try:
             os.startfile(caminhoPrograma)
             listaCaminhos['archives'].append({'caminho': caminhoPrograma, 'nome': fala})
-            with open('meu_arquivo.json', 'w', encoding='utf-8') as f:
+            with open('memoria.json', 'w', encoding='utf-8') as f:
                 json.dump(listaCaminhos, f)
-            print("Comando salvo com sucesso.")
+            falar('Comando salvo com sucesso!')
         except:
-            print("Não funcionei com este arquivo.")
+            falar('Infelizmente aconteceu algum erro com este arquivo')
     return
-
-print("Olá! Atualmente eu repito o que você diz, e abro programas!")
-print("Para abrir programas, fale 'Abrir nomedoprograma', e ele irá abrir uma caixa para você selecionar o exe do arquivo.")
 
 with speaker.Microphone() as speak:
     rec.adjust_for_ambient_noise(speak)
@@ -49,9 +92,10 @@ with speaker.Microphone() as speak:
             audio = rec.listen(speak)
             fala = rec.recognize_google(audio, language='pt')
             palavras = fala.split()
-            print('Você disse: ', fala)
 
-            if palavras[0].lower() == "abrir" and len(palavras) > 1:
+            if fala == "tocar música":
+                escolher();
+            elif palavras[0].lower() == "abrir" and len(palavras) > 1:
                 fala = fala.lower().replace("abrir ","",1)
                 if len(listaCaminhos['archives']) > 0:
                     achouPrograma = False
@@ -67,7 +111,9 @@ with speaker.Microphone() as speak:
                         salvarCaminhoPrograma()
                 else:
                     salvarCaminhoPrograma()
-        except speaker.UnknownValueError:
-            print("Não consegui entender seu áudio")
+            else:
+                print("Você falou: "+fala)
         except speaker.RequestError as e:
             print("A sua requisição de áudio falhou, verifique se está conectado na internet {0}".format(e))
+        except speaker.UnknownValueError:
+            print
