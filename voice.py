@@ -47,6 +47,8 @@ def escolher ():
         root.destroy();
 
         if selecionar != '':
+            global musicas
+            musicas = []
             selecionar = str(selecionar)[1:-1].split("', ");
             if len(selecionar) == 1:
                 selecionar[0] = selecionar[0][0:-1]
@@ -59,6 +61,11 @@ def escolher ():
         else:
             falar('Você não selecionou nenhuma música.')
         return musicas
+
+def carregarPlaylist():
+    falar('Carregando playlist salva')
+    musicas = listaCaminhos["playlist"]
+    iniciarMusica()
 
 def iniciarMusica():
     falar('Iniciando sua playlist')
@@ -117,9 +124,9 @@ def salvarCaminhoPrograma():
 with speaker.Microphone() as speak:
     rec.adjust_for_ambient_noise(speak)
     mixer.init()
-    
+
     while True:
-        if mixer.music.get_busy() == False and estadoMusica:
+        if mixer.music.get_busy() == False and estadoMusica and musicaAtual <= len(musicas):
             print("Tocando agora "+musicas[musicaAtual])
             mixer.music.load(musicas[musicaAtual])
             mixer.music.play()
@@ -131,6 +138,8 @@ with speaker.Microphone() as speak:
             palavras = fala.split()
 
             if fala == "tocar música":
+                if estadoMusica:
+                    pararMusica()
                 escolher()
             elif fala == "tocar playlist" and musicas != '':
                 iniciarMusica()
@@ -140,6 +149,8 @@ with speaker.Microphone() as speak:
                 voltarMusica()
             elif fala == "parar música" and estadoMusica:
                 pararMusica()
+            elif fala == "carregar playlist salva":
+                carregarPlaylist()
             elif fala == "salvar playlist":
                 salvarPlaylist()
             elif fala == "excluir playlist":
