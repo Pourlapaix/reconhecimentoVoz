@@ -1,10 +1,10 @@
 ﻿import speech_recognition as speaker
 from pygame  import mixer
 from gtts import gTTS
-import os,json,re,playsound
+import os,json,re,playsound,random
 
 def falar (frase):
-    file = str("hello" + str(frase[0]) + ".mp3")
+    file = str("voice" + str(random.randint(0,9)) + str(random.randint(0,9)) + ".mp3")
     gTTS(text=frase, lang='pt').save('/tmp/'+file)
     playsound.playsound('/tmp/'+file,True)
     os.remove('/tmp/'+file)
@@ -24,15 +24,22 @@ with open('memoria.json', 'r') as f:
     texto = f.read()
 
 if texto == "":
+    #Caminho dos programas
     listaCaminhos = {'archives': []}
+    #Lista de musicas
+    musicas = []
 else:
+    #Caminho dos programas
     listaCaminhos = json.loads(texto)
+    #Lista de musicas
+    musicas = listaCaminhos["playlist"]
 
 #Reconhecedor do Google
 rec = speaker.Recognizer()
 
-#Lista de musicas
-musicas = []
+#Localizacao da musica musicaAtual
+musicaAtual = 0
+estadoMusica = False
 
 def escolher ():
         falar('Ok! Selecione as músicas que deseja ouvir.')
@@ -53,23 +60,48 @@ def escolher ():
                 if i == len(selecionar) -1:
                     selecionar[i] = selecionar[i][0:-1]
                 musicas.append(selecionar[i][1::])
-            reproduzir();
+            iniciarMusica()
         else:
             falar('Você não selecionou nenhuma música.')
         return musicas
 
-def reproduzir ():
-        musicaAtual = 0
-        mixer.init()
-        while True:
-            if mixer.music.get_busy() == False:
-                proximaMusica(musicaAtual)
-                musicaAtual += 1
+def iniciarMusica():
+    falar('Iniciando sua playlist')
+    global musicaAtual
+    musicaAtual = 0
+    global estadoMusica
+    estadoMusica = True
 
-def proximaMusica(musicaAtual):
+def pularMusica():
     print("Tocando agora "+musicas[musicaAtual])
-    musica_atual = mixer.music.load(musicas[musicaAtual])
-    musica_atual = mixer.music.play()
+    mixer.music.load(musicas[musicaAtual])
+    mixer.music.play()
+
+def voltarMusica():
+    global musicaAtual
+    if musicaAtual > 0:
+        musicaAtual -= 1
+    print("Tocando agora "+musicas[musicaAtual])
+    mixer.music.load(musicas[musicaAtual])
+    mixer.music.play()
+
+def pararMusica():
+    global estadoMusica
+    estadoMusica = False
+    mixer.music.stop()
+    falar('Você desligou a música.')
+
+def salvarPlaylist():
+    listaCaminhos["playlist"] = musicas
+    with open('memoria.json', 'w', encoding='utf-8') as f:
+        json.dump(listaCaminhos, f)
+        falar('Playlist salva com sucesso!')
+
+def excluirPlaylist():
+    listaCaminhos["playlist"] = []
+    with open('memoria.json', 'w', encoding='utf-8') as f:
+        json.dump(listaCaminhos, f)
+        falar('Playlist deletada com sucesso!')
 
 def salvarCaminhoPrograma():
     root = Tk()
@@ -91,15 +123,34 @@ with speaker.Microphone() as speak:
     rec.adjust_for_ambient_noise(speak)
 
     while True:
+        mixer.init()
+        if mixer.music.get_busy() == False and estadoMusica:
+            print("Tocando agora "+musicas[musicaAtual])
+            mixer.music.load(musicas[musicaAtual])
+            mixer.music.play()
+            musicaAtual += 1
+
         try:
             audio = rec.listen(speak)
-            fala = rec.recognize_google(audio, language='pt')
+            fala = rec.recognize_google(audio, language='pt').lower()
             palavras = fala.split()
 
             if fala == "tocar música":
-                escolher();
-            elif palavras[0].lower() == "abrir" and len(palavras) > 1:
-                fala = fala.lower().replace("abrir ","",1)
+                escolher()
+            elif fala == "tocar playlist" and musicas != '':
+                iniciarMusica()
+            elif fala == "pular música" or fala == "próxima música" and estadoMusica:
+                pularMusica()
+            elif fala == "voltar música" or fala == "música anterior" and estadoMusica:
+                voltarMusica()
+            elif fala == "parar música" and estadoMusica:
+                pararMusica()
+            elif fala == "salvar playlist":
+                salvarPlaylist()
+            elif fala == "excluir playlist":
+                excluirPlaylist()
+            elif palavras[0] == "abrir" and len(palavras) > 1:
+                fala = fala.replace("abrir ","",1)
                 if len(listaCaminhos['archives']) > 0:
                     achouPrograma = False
                     for i in range(len(listaCaminhos['archives'])):
