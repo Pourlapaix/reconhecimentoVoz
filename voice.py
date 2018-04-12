@@ -1,7 +1,19 @@
 ﻿import speech_recognition as speaker
+import os,json,re,playsound,random
 from pygame  import mixer
 from gtts import gTTS
-import os,json,re,playsound,random
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
+
+#Reconhecedor do Google
+rec = speaker.Recognizer()
+#Configuracoes do seletor
+ftypes = [('Exe files',"*.exe"), ('Photo files',"*.jpg")]
+ttl  = "Select the program"
+dir1 = 'C:\\'
+#Setar variáveis padroes
+musicaAtual = 0
+estadoMusica = False
 
 def falar (frase):
     file = str("voice" + str(random.randint(0,9)) + str(random.randint(0,9)) + ".mp3")
@@ -11,35 +23,18 @@ def falar (frase):
 
 falar('Bem vindo!')
 
-#Seletor de arquivos
-from tkinter import Tk
-from tkinter.filedialog import askopenfilename
-
-ftypes = [('Exe files',"*.exe"), ('Photo files',"*.jpg")]
-ttl  = "Select the program"
-dir1 = 'C:\\'
-
-#Programas já salvos
+#Ler programas já salvos
 with open('memoria.json', 'r') as f:
     texto = f.read()
 
 if texto == "":
-    #Caminho dos programas
     listaCaminhos = {'archives': []}
-    #Lista de musicas
     musicas = []
 else:
     #Caminho dos programas
     listaCaminhos = json.loads(texto)
     #Lista de musicas
     musicas = listaCaminhos["playlist"]
-
-#Reconhecedor do Google
-rec = speaker.Recognizer()
-
-#Localizacao da musica musicaAtual
-musicaAtual = 0
-estadoMusica = False
 
 def escolher ():
         falar('Ok! Selecione as músicas que deseja ouvir.')
@@ -121,9 +116,9 @@ def salvarCaminhoPrograma():
 
 with speaker.Microphone() as speak:
     rec.adjust_for_ambient_noise(speak)
-
+    mixer.init()
+    
     while True:
-        mixer.init()
         if mixer.music.get_busy() == False and estadoMusica:
             print("Tocando agora "+musicas[musicaAtual])
             mixer.music.load(musicas[musicaAtual])
