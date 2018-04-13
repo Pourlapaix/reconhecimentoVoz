@@ -16,7 +16,7 @@ musicaAtual = 0
 estadoMusica = False
 
 def falar (frase):
-    file = str("voice" + str(random.randint(0,9)) + str(random.randint(0,9)) + ".mp3")
+    file = str("voice" + str(random.randint(0,9)) + str(random.randint(0,9)) + str(random.randint(0,9)) + ".mp3")
     gTTS(text=frase, lang='pt').save('/tmp/'+file)
     playsound.playsound('/tmp/'+file,True)
     os.remove('/tmp/'+file)
@@ -75,9 +75,13 @@ def iniciarMusica():
     estadoMusica = True
 
 def pularMusica():
+    global musicaAtual
+    if musicaAtual > len(musicas) - 1:
+        musicaAtual -= 1
     print("Tocando agora "+musicas[musicaAtual])
     mixer.music.load(musicas[musicaAtual])
     mixer.music.play()
+    musicaAtual += 1
 
 def voltarMusica():
     global musicaAtual
@@ -126,7 +130,7 @@ with speaker.Microphone() as speak:
     mixer.init()
 
     while True:
-        if mixer.music.get_busy() == False and estadoMusica and musicaAtual <= len(musicas):
+        if mixer.music.get_busy() == False and estadoMusica and musicaAtual < len(musicas):
             print("Tocando agora "+musicas[musicaAtual])
             mixer.music.load(musicas[musicaAtual])
             mixer.music.play()
